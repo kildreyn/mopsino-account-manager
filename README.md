@@ -13,6 +13,10 @@
   <a href="https://github.com/kildreyn/mopsino-account-manager/releases/latest">
     <img src="https://img.shields.io/badge/DOWNLOAD%20LATEST%20SETUP-Windows-2ea44f?style=for-the-badge&logo=windows11&logoColor=white" alt="Download latest Mopsino Account Manager Setup">
   </a>
+  &nbsp;
+  <a href="https://discord.gg/WzkhS8VPCN">
+    <img src="https://img.shields.io/badge/JOIN%20MOPSINO%20DISCORD-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Mopsino Discord">
+  </a>
 </p>
 
 <p align="center"><b>Direct installer download — no scrolling through release notes.</b></p>
