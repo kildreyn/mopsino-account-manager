@@ -8,9 +8,14 @@
 [![Downloads](https://img.shields.io/github/downloads/kildreyn/mopsino-account-manager/total?style=flat-square&label=downloads&color=22c55e)](https://github.com/kildreyn/mopsino-account-manager/releases)
 [![Windows](https://img.shields.io/badge/OS-Windows-0078D4?style=flat-square&logo=windows11&logoColor=white)](https://github.com/kildreyn/mopsino-account-manager/releases/latest)
 [![Auto Update](https://img.shields.io/badge/updates-automatic-8b5cf6?style=flat-square)](https://github.com/kildreyn/mopsino-account-manager/releases)
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/3dkZrsr7qF)
 
-### [⬇️ DOWNLOAD LATEST VERSION](https://github.com/kildreyn/mopsino-account-manager/releases/latest)
+<p align="center">
+  <a href="https://github.com/kildreyn/mopsino-account-manager/releases/download/v1.1.0/MopsinoAccountManager-Setup-1.1.0.exe">
+    <img src="https://img.shields.io/badge/DOWNLOAD%20SETUP-v1.1.0-2ea44f?style=for-the-badge&logo=windows11&logoColor=white" alt="Download Mopsino Account Manager Setup">
+  </a>
+</p>
+
+<p align="center"><b>Direct installer download — no scrolling through release notes.</b></p>
 
 </div>
 
@@ -73,9 +78,10 @@ Mopsino stores sensitive account/session data locally. Never share your Roblox s
 
 ## Links
 
+- **Download setup:** https://github.com/kildreyn/mopsino-account-manager/releases/download/v1.1.0/MopsinoAccountManager-Setup-1.1.0.exe
 - **Latest release:** https://github.com/kildreyn/mopsino-account-manager/releases/latest
 - **All releases:** https://github.com/kildreyn/mopsino-account-manager/releases
-- **Discord:** https://discord.gg/3dkZrsr7qF
+- **Discord:** invite will be added after the official server setup is finished.
 
 ---
 
