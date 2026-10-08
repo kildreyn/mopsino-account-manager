@@ -10,8 +10,8 @@
 [![Auto Update](https://img.shields.io/badge/updates-automatic-8b5cf6?style=flat-square)](https://github.com/kildreyn/mopsino-account-manager/releases)
 
 <p align="center">
-  <a href="https://github.com/kildreyn/mopsino-account-manager/releases/download/v1.1.0/MopsinoAccountManager-Setup-1.1.0.exe">
-    <img src="https://img.shields.io/badge/DOWNLOAD%20SETUP-v1.1.0-2ea44f?style=for-the-badge&logo=windows11&logoColor=white" alt="Download Mopsino Account Manager Setup">
+  <a href="https://github.com/kildreyn/mopsino-account-manager/releases/latest">
+    <img src="https://img.shields.io/badge/DOWNLOAD%20LATEST%20SETUP-Windows-2ea44f?style=for-the-badge&logo=windows11&logoColor=white" alt="Download latest Mopsino Account Manager Setup">
   </a>
 </p>
 
@@ -78,10 +78,10 @@ Mopsino stores sensitive account/session data locally. Never share your Roblox s
 
 ## Links
 
-- **Download setup:** https://github.com/kildreyn/mopsino-account-manager/releases/download/v1.1.0/MopsinoAccountManager-Setup-1.1.0.exe
+- **Download setup:** https://github.com/kildreyn/mopsino-account-manager/releases/latest
 - **Latest release:** https://github.com/kildreyn/mopsino-account-manager/releases/latest
 - **All releases:** https://github.com/kildreyn/mopsino-account-manager/releases
-- **Discord:** invite will be added after the official server setup is finished.
+- **Discord:** https://discord.gg/WzkhS8VPCN
 
 ---
 
