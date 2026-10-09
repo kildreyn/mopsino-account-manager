@@ -1,0 +1,72 @@
+name: Publish v1.2.2 updater bridge
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/bridge-v1.2.2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bridge-release:
+    name: Mirror v1.2.2 release assets
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Download v1.2.2 updater assets from the new repository
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $base = "https://github.com/kildreyn/mopsino-acc-manager/releases/download/v1.2.2"
+          $files = @(
+            "latest.yml",
+            "MopsinoAccountManager-Setup-1.2.2.exe",
+            "MopsinoAccountManager-Setup-1.2.2.exe.blockmap"
+          )
+
+          foreach ($file in $files) {
+            Write-Host "Downloading $file"
+            Invoke-WebRequest -Uri "$base/$file" -OutFile $file
+          }
+
+      - name: Publish updater bridge release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $repo = "kildreyn/mopsino-account-manager"
+          $tag = "v1.2.2"
+
+          gh release view $tag --repo $repo *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag `
+              "latest.yml" `
+              "MopsinoAccountManager-Setup-1.2.2.exe" `
+              "MopsinoAccountManager-Setup-1.2.2.exe.blockmap" `
+              --repo $repo `
+              --clobber
+          } else {
+            @"
+          This is an updater bridge release for older Mopsino Account Manager builds.
+
+          Older builds check this legacy repository for updates. Installing v1.2.2 moves them onto the current updater repository:
+          kildreyn/mopsino-acc-manager
+
+          No separate legacy build was created; these are the official v1.2.2 updater assets mirrored from the current repository.
+          "@ | Set-Content -Path bridge-notes.md -Encoding utf8
+
+            gh release create $tag `
+              "latest.yml" `
+              "MopsinoAccountManager-Setup-1.2.2.exe" `
+              "MopsinoAccountManager-Setup-1.2.2.exe.blockmap" `
+              --repo $repo `
+              --target main `
+              --title "1.2.2" `
+              --notes-file bridge-notes.md
+          }
