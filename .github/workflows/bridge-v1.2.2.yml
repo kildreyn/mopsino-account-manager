@@ -18,21 +18,22 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Download v1.2.2 updater assets from the new repository
+      - name: Download v1.2.2 updater assets from the private current repository
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: |
           $ErrorActionPreference = "Stop"
-          $base = "https://github.com/kildreyn/mopsino-acc-manager/releases/download/v1.2.2"
-          $files = @(
-            "latest.yml",
-            "MopsinoAccountManager-Setup-1.2.2.exe",
-            "MopsinoAccountManager-Setup-1.2.2.exe.blockmap"
-          )
 
-          foreach ($file in $files) {
-            Write-Host "Downloading $file"
-            Invoke-WebRequest -Uri "$base/$file" -OutFile $file
+          if ([string]::IsNullOrWhiteSpace($env:GH_TOKEN)) {
+            throw "RELEASES_TOKEN is not configured in the legacy repository."
           }
+
+          gh release download v1.2.2 `
+            --repo kildreyn/mopsino-acc-manager `
+            --pattern "latest.yml" `
+            --pattern "MopsinoAccountManager-Setup-1.2.2.exe" `
+            --pattern "MopsinoAccountManager-Setup-1.2.2.exe.blockmap"
 
       - name: Publish updater bridge release
         shell: pwsh
