@@ -1,0 +1,142 @@
+name: Build, attest & publish release
+
+# Builds Mopsino on GitHub's own runners from the tagged source and publishes the
+# installer here with a signed build-provenance attestation. Anyone can check that a
+# downloaded exe was built by this workflow:
+#   gh attestation verify MopsinoAccountManager-Setup-X.Y.Z.exe --repo kildreyn/mopsino-account-manager
+#
+# Trigger: create a branch named build/vX.Y.Z (publish) or build-test/vX.Y.Z (dry run,
+# nothing is published). The source repository must already have the tag vX.Y.Z.
+
+on:
+  create:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    if: github.event.ref_type == 'branch' && (startsWith(github.event.ref, 'build/v') || startsWith(github.event.ref, 'build-test/v'))
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - name: Read version
+        id: meta
+        shell: pwsh
+        env:
+          REF: ${{ github.event.ref }}
+        run: |
+          $ref = $env:REF
+          $version = $ref -replace '^build(-test)?/v', ''
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid version in branch name: $ref" }
+          $publish = if ($ref.StartsWith('build/')) { 'true' } else { 'false' }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "publish=$publish" >> $env:GITHUB_OUTPUT
+          Write-Host "Version $version, publish=$publish"
+
+      - name: Checkout tagged source
+        uses: actions/checkout@v4
+        with:
+          repository: kildreyn/mopsino-source
+          ref: v${{ steps.meta.outputs.version }}
+          token: ${{ secrets.RELEASES_TOKEN }}
+          path: source
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install and check
+        working-directory: source
+        run: |
+          npm version ${{ steps.meta.outputs.version }} --no-git-tag-version --allow-same-version
+          npm ci
+          npx tsc --noEmit
+          npm test
+
+      - name: Build and publish installer
+        if: steps.meta.outputs.publish == 'true'
+        working-directory: source
+        run: npx electron-vite build && npx electron-builder --win nsis portable --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build installer (dry run)
+        if: steps.meta.outputs.publish != 'true'
+        working-directory: source
+        run: npx electron-vite build && npx electron-builder --win nsis portable --publish never
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: source/dist/*.exe
+
+      - name: Scan on VirusTotal
+        id: vt
+        shell: pwsh
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:VT_API_KEY)) { Write-Host "VT_API_KEY not set; skipping upload."; "uploaded=false" >> $env:GITHUB_OUTPUT; exit 0 }
+          $headers = @{ "x-apikey" = $env:VT_API_KEY }
+          foreach ($file in Get-ChildItem source/dist/*.exe) {
+            # Files over 32 MB need a one-time upload URL.
+            $url = (Invoke-RestMethod -Headers $headers -Uri "https://www.virustotal.com/api/v3/files/upload_url").data
+            $result = & curl.exe -sS -f -X POST $url -H "x-apikey: $($env:VT_API_KEY)" -F "file=@$($file.FullName)"
+            if ($LASTEXITCODE -ne 0) { throw "VirusTotal upload failed for $($file.Name)" }
+            Write-Host "Uploaded $($file.Name)"
+            Start-Sleep -Seconds 16  # free API: 4 requests per minute
+          }
+          "uploaded=true" >> $env:GITHUB_OUTPUT
+
+      - name: Write release notes
+        shell: pwsh
+        run: |
+          $version = "${{ steps.meta.outputs.version }}"
+          $content = Get-Content source/CHANGELOG.md -Raw
+          $match = [regex]::Match($content, "(?ms)^## \[$([regex]::Escape($version))\].*?(?=^## \[|\z)")
+          $notes = if ($match.Success) { ($match.Value -replace "(?m)^## \[[^\]]+\][^\r\n]*\r?\n", "").Trim() } else { "" }
+          $lines = @($notes, "", "## Verify your download", "", "| File | SHA-256 | VirusTotal |", "|---|---|---|")
+          foreach ($file in Get-ChildItem source/dist/*.exe) {
+            $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
+            $lines += "| ``$($file.Name)`` | ``$hash`` | [report](https://www.virustotal.com/gui/file/$hash) |"
+          }
+          $lines += ""
+          $lines += "These files were built by GitHub Actions from the tagged source and carry a signed build-provenance attestation. Check a download with the [GitHub CLI](https://cli.github.com/):"
+          $lines += ""
+          $lines += '```'
+          $lines += "gh attestation verify MopsinoAccountManager-Setup-$version.exe --repo kildreyn/mopsino-account-manager"
+          $lines += '```'
+          $lines += ""
+          $lines += "What Mopsino stores and sends: [PRIVACY.md](https://github.com/kildreyn/mopsino-account-manager/blob/main/PRIVACY.md)"
+          Set-Content -Path release-notes.md -Value ($lines -join "`n") -Encoding utf8
+          Get-Content release-notes.md
+
+      - name: Publish release notes
+        if: steps.meta.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "v${{ steps.meta.outputs.version }}" --repo ${{ github.repository }} --notes-file release-notes.md
+
+      - name: Keep dry-run output
+        if: steps.meta.outputs.publish != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dry-run-${{ steps.meta.outputs.version }}
+          path: |
+            source/dist/*.exe
+            release-notes.md
+          retention-days: 3
+
+      - name: Remove trigger branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF: ${{ github.event.ref }}
+        shell: bash
+        run: gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/$REF"

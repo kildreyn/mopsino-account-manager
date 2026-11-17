@@ -75,6 +75,8 @@ Mopsino can parse account stats, safety/ban status, rewards and drops, then opti
 
 ## Safety
 
+**[Privacy & Security](PRIVACY.md)** — what Mopsino stores, where it connects, what it never collects, and how to verify your download (SHA-256, VirusTotal, GitHub build attestation).
+
 Mopsino stores sensitive account/session data locally. Never share your Roblox session cookies, authentication tickets, license secrets or private configuration files with other people.
 
 > [!NOTE]
