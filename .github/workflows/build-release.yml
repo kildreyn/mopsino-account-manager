@@ -101,19 +101,7 @@ jobs:
           $content = Get-Content source/CHANGELOG.md -Raw
           $match = [regex]::Match($content, "(?ms)^## \[$([regex]::Escape($version))\].*?(?=^## \[|\z)")
           $notes = if ($match.Success) { ($match.Value -replace "(?m)^## \[[^\]]+\][^\r\n]*\r?\n", "").Trim() } else { "" }
-          $lines = @($notes, "", "## Verify your download", "", "| File | SHA-256 | VirusTotal |", "|---|---|---|")
-          foreach ($file in Get-ChildItem source/dist/*.exe) {
-            $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
-            $lines += "| ``$($file.Name)`` | ``$hash`` | [report](https://www.virustotal.com/gui/file/$hash) |"
-          }
-          $lines += ""
-          $lines += "These files were built by GitHub Actions from the tagged source and carry a signed build-provenance attestation. Check a download with the [GitHub CLI](https://cli.github.com/):"
-          $lines += ""
-          $lines += '```'
-          $lines += "gh attestation verify MopsinoAccountManager-Setup-$version.exe --repo kildreyn/mopsino-account-manager"
-          $lines += '```'
-          $lines += ""
-          $lines += "What Mopsino stores and sends: [PRIVACY.md](https://github.com/kildreyn/mopsino-account-manager/blob/main/PRIVACY.md)"
+          $lines = @($notes)
           Set-Content -Path release-notes.md -Value ($lines -join "`n") -Encoding utf8
           Get-Content release-notes.md
 
